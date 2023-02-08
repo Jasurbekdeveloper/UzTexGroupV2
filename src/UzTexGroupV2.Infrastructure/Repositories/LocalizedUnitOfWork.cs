@@ -5,11 +5,11 @@ namespace UzTexGroupV2.Infrastructure.Repositories;
 
 public class LocalizedUnitOfWork : UnitOfWorkBase
 {
-    public readonly NewsRepository NewsRepository;
-    public readonly JobRepository JobRepository;
-    public readonly CompanyRepository CompanyRepository;
-    public readonly FactoryRepository FactoryRepository;
-    public readonly ApplicationRepository ApplicationRepository;
+    public NewsRepository NewsRepository { get; private set; }
+    public JobRepository JobRepository { get; private set; }
+    public CompanyRepository CompanyRepository { get; private set; }
+    public FactoryRepository FactoryRepository { get; private set; }
+    public ApplicationRepository ApplicationRepository { get; private set; }
     public LocalizedUnitOfWork(UzTexGroupDbContext uzTexGroupDbContext) : base(uzTexGroupDbContext)
     {
         this.NewsRepository = new NewsRepository(this.uzTexGroupDbContext);
@@ -26,14 +26,19 @@ public class LocalizedUnitOfWork : UnitOfWorkBase
         var properties = this
             .GetType()
             .GetProperties();
-        foreach (var property in properties)
+        foreach (var propertyInfo in properties)
         {
-            if (property is null)
+            if (propertyInfo is null)
                 continue;
-            property?
-               .GetType()?
-               .GetProperty("language")?
-               .SetValue(property.GetType(), language);
+            var languageProperty = propertyInfo
+                .PropertyType?
+                .BaseType?
+                .GetProperty("Language");
+
+            var data = (languageProperty.GetValue(this));
+
+            languageProperty?
+                .SetValue(this, language);
         }
     }
 }

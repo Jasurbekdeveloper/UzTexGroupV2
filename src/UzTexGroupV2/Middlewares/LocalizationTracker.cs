@@ -30,14 +30,19 @@ public class LocalizationTracker : IMiddleware
 
     private async Task<Language> GetLanguageByCode(string languageCode)
     {
-        var language = await this._dbContext
-            .Set<Language>()
-            .FirstOrDefaultAsync();
+        // var language = await this._dbContext
+        //     .Set<Language>()
+        //     .FirstOrDefaultAsync();
+        //
+        // language = (await this._dbContext
+        //     .Set<Language>()
+        //     .FirstOrDefaultAsync(language => language.Code == languageCode.ToLowerInvariant())) ?? language;
 
-        language = (await this._dbContext
-            .Set<Language>()
-            .FirstOrDefaultAsync(language => language.Code == languageCode)) ?? language;
-
-        return language;
+        // return language;
+        return new Language()
+        {
+            Code = "uz",
+            Name = "Uzbek"
+        };
     }
 }
