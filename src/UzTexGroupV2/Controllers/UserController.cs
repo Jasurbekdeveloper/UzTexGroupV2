@@ -12,16 +12,17 @@ namespace UzTexGroupV2.Controllers;
 [Route("/{langCode}/[controller]")]
 public class UserController : LocalizedControllerBase
 {
-    public UserController(LocalizedUnitOfWork localizedUnitOfWork, UserService service) : base(localizedUnitOfWork)
+    private readonly IHttpContextAccessor _contextAccessor;
+    public UserController(LocalizedUnitOfWork localizedUnitOfWork, IHttpContextAccessor contextAccessor) : base(
+        localizedUnitOfWork)
     {
+        this._contextAccessor = contextAccessor;
     }
 
-    [HttpGet]
+    [HttpGet("/{name}")]
     [ResponeFilter]
-    public List<int> GetData()
+    public IActionResult GetData(string name)
     {
-        Console.WriteLine(base.Request.RouteValues["langCode"]);
-
-        return new List<int>() { 1, 2, 3 };
+        return StatusCode(200, name);
     }
 }
