@@ -1,4 +1,4 @@
-﻿using UzTexGroupV2.Domain;
+﻿using UzTexGroupV2.Domain.Exceptions;
 
 namespace UzTexGroupV2.Application.Services;
 

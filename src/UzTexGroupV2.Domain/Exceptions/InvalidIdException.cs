@@ -1,4 +1,4 @@
-﻿namespace UzTexGroupV2.Domain;
+﻿namespace UzTexGroupV2.Domain.Exceptions;
 
 public class InvalidIdException : Exception
 {

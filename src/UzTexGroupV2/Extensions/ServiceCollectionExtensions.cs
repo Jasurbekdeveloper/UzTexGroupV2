@@ -28,14 +28,4 @@ public static class ServiceCollectionExtensions
         
         return serviceCollection;
     }
-    
-    public static IServiceCollection ConfigureFilters(this IServiceCollection serviceCollection)
-    {
-        serviceCollection.AddControllers(configure =>
-        {
-            configure.Filters.Add<ResponeFilter>();
-        });
-        
-        return serviceCollection;
-    }
 }

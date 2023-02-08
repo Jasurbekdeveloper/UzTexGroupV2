@@ -5,12 +5,15 @@ namespace UzTexGroupV2.Application.EntitiesDto.Factory;
 
 public record CreateFactoryDto(
     Guid? id,
+
     [Required(ErrorMessage = $"{nameof(CreateFactoryDto.name)}  berilishi majburiy")]
     [StringLength(15, ErrorMessage = "Ism 15 ta belgida oshmasligi kerak")]
     string name,
-    [Required(ErrorMessage = $"{nameof(CreateFactoryDto.companyId)}  berilishi majburiy")]
+
+    [Required(ErrorMessage =$"{ nameof(CreateFactoryDto.companyId)}  berilishi majburiy")]
     Guid companyId,
-    [Required(ErrorMessage = $"{nameof(CreateFactoryDto.languageCode)}  berilishi majburiy")]
+    [Required(ErrorMessage =$"{ nameof(CreateFactoryDto.languageCode)}  berilishi majburiy")]
     string languageCode,
-    [Required(ErrorMessage = $"{nameof(CreateFactoryDto.createAddressDto)}  berilishi majburiy")]
+    [Required(ErrorMessage =$"{ nameof(CreateFactoryDto.createAddressDto)}  berilishi majburiy")]
     CreateAddressDto createAddressDto);
+

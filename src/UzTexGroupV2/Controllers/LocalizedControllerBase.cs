@@ -12,10 +12,10 @@ public class LocalizedControllerBase : Controller
     {
         this.localizedUnitOfWork = localizedUnitOfWork;
     }
-    public override async void OnActionExecuting(ActionExecutingContext context)
+    public override void OnActionExecuting(ActionExecutingContext context)
     {
         base.OnActionExecuting(context);
-        await this.localizedUnitOfWork.ChangeLocalization(new Language()
+        this.localizedUnitOfWork.ChangeLocalization(new Language()
         {
             Code = context.RouteData.Values["langCode"] as String ?? "uz"
         });

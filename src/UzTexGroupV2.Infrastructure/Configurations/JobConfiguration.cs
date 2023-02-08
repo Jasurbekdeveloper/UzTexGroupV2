@@ -23,6 +23,6 @@ public class JobConfiguration : IEntityTypeConfiguration<Job>
         builder
             .HasOne(job => job.Factory)
             .WithMany(factory => factory.Jobs)
-            .HasForeignKey(job => new { job.FactoryId, job.LanguageCode });
+            .HasForeignKey(job => new { job.FactoryId, job.LanguageCode});
     }
 }
