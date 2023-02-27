@@ -1,6 +1,4 @@
 ﻿using UzTexGroupV2.Application.EntitiesDto;
-using UzTexGroupV2.Application.EntitiesDto.Factory;
-using UzTexGroupV2.Application.EntitiesDto;
 using UzTexGroupV2.Domain.Entities;
 
 namespace UzTexGroupV2.Application.MappingProfiles;
@@ -16,7 +14,6 @@ internal static class JobMap
             Desription = createJobDto.Desription,
             Salary = createJobDto.Salary,
             WorkTime = createJobDto.WorkTime,
-            LanguageCode = createJobDto.LanguageCode,
             FactoryId = createJobDto.FactoryId
         };
     }
@@ -29,7 +26,7 @@ internal static class JobMap
             description : job.Desription,
             salary : job.Salary,
             workTime : job.WorkTime,
-            factoryDto : FactoryMap.MapToFactoryDto(job.Factory)
+            factoryDto : job.Factory is not null ? FactoryMap.MapToFactoryDto(job.Factory) : null
         );
     }
 
@@ -41,5 +38,4 @@ internal static class JobMap
         job.FactoryId = modifyJobDto.FactoryId ?? job.FactoryId;
         job.WorkTime = modifyJobDto.WorkTime ?? job.WorkTime;
     }
-    
 }

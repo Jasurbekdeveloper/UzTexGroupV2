@@ -8,10 +8,10 @@ public static class CompanyMapper
     public static CompanyDTO ToCompanyDTO(Company company)
     {
         return new CompanyDTO
-        {
-            Id = company.Id,
-            Name = company.Name,
-        };
+        (
+            id: company.Id,
+            name: company.Name
+        );
     }
 
     public static Company ToCompany(CreateCompanyDTO createCompanyDTO)
@@ -19,12 +19,11 @@ public static class CompanyMapper
         return new Company
         {
             Id = createCompanyDTO.Id ?? Guid.NewGuid(),
-            LanguageCode = createCompanyDTO.LanguageCode,
-            Name = createCompanyDTO.Name,
+            Name = createCompanyDTO.name,
         };
     }
     public static void ToCompany(ModifyCompanyDTO modifyCompanyDTO, Company company)
     {
-        company.Name = modifyCompanyDTO.Name ?? company.Name;
+        company.Name = modifyCompanyDTO.name ?? company.Name;
     }
 }

@@ -1,53 +1,67 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using UzTexGroupV2.Application.EntitiesDto.Company;
 using UzTexGroupV2.Application.MappingProfiles;
+using UzTexGroupV2.Application.QueryExtentions;
 using UzTexGroupV2.Domain.Entities;
 using UzTexGroupV2.Infrastructure.Repositories;
+using UzTexGroupV2.Model;
 
 namespace UzTexGroupV2.Application.Services;
 
-public class CompanyService : IServiceBase<CreateCompanyDTO, CompanyDTO, ModifyCompanyDTO>
+public class CompanyService
 {
     private readonly LocalizedUnitOfWork unitOfWork;
+    private readonly IHttpContextAccessor httpContextAccessor;
 
-    public CompanyService(LocalizedUnitOfWork unitOfWork)
+    public CompanyService(
+        LocalizedUnitOfWork unitOfWork,
+        IHttpContextAccessor httpContextAccessor)
     {
         this.unitOfWork = unitOfWork;
+        this.httpContextAccessor = httpContextAccessor;
     }
 
-    public async ValueTask<CompanyDTO> CreateEntityAsync(
+    public async ValueTask<CompanyDTO> CreateCompanyAsync(
         CreateCompanyDTO createCompanyDTO)
     {
-
         var company = CompanyMapper
             .ToCompany(createCompanyDTO);
 
-        await unitOfWork.CompanyRepository
+        var storedCompany = await unitOfWork.CompanyRepository
             .CreateAsync(company);
 
         await unitOfWork.SaveChangesAsync();
 
         return CompanyMapper
-            .ToCompanyDTO(company);
+            .ToCompanyDTO(storedCompany);
     }
-    public async ValueTask<IQueryable<CompanyDTO>> RetrieveAllEntitiesAsync()
+
+    public async ValueTask<IQueryable<CompanyDTO>> RetrieveAllCompnaiesAsync(
+        QueryParameter queryParameter)
     {
         var companies = await unitOfWork
             .CompanyRepository.GetAllAsync();
 
-        return companies.Select(company =>
-        CompanyMapper.ToCompanyDTO(company));
+        var paginationCompany = companies.PagedList(
+            httpContext: httpContextAccessor.HttpContext,
+            queryParameter: queryParameter);
+
+        return paginationCompany.Select(company =>
+            CompanyMapper.ToCompanyDTO(company));
     }
-    public async ValueTask<CompanyDTO> RetrieveByIdEntityAsync(Guid id)
+
+    public async ValueTask<CompanyDTO> RetrieveCompanyByIdAsync(Guid id)
     {
         var storageCompany = await GetByExpressionAsync(id);
 
         return CompanyMapper.ToCompanyDTO(storageCompany);
     }
-    public async ValueTask<CompanyDTO> ModifyEntityAsync(
+
+    public async ValueTask<CompanyDTO> ModifyCompanyAsync(
         ModifyCompanyDTO modifyCompanyDTO)
     {
-        var storageCompany = await GetByExpressionAsync(modifyCompanyDTO.Id);
+        var storageCompany = await GetByExpressionAsync(modifyCompanyDTO.id);
 
         CompanyMapper.ToCompany(modifyCompanyDTO, storageCompany);
 
@@ -59,7 +73,8 @@ public class CompanyService : IServiceBase<CreateCompanyDTO, CompanyDTO, ModifyC
 
         return CompanyMapper.ToCompanyDTO(modifiedCompany);
     }
-    public async ValueTask<CompanyDTO> DeleteEntityAsync(Guid id)
+
+    public async ValueTask<CompanyDTO> DeleteCompanyAsync(Guid id)
     {
         var storageCompany = await GetByExpressionAsync(id);
 
@@ -71,11 +86,19 @@ public class CompanyService : IServiceBase<CreateCompanyDTO, CompanyDTO, ModifyC
         return CompanyMapper.ToCompanyDTO(company);
     }
 
-    private async ValueTask<Company> GetByExpressionAsync(Guid id)
+    private async ValueTask<Company?> GetByExpressionAsync(Guid id)
     {
-        var companies = await this.unitOfWork.CompanyRepository
-           .GetByExpression(expression => expression.Id == id);
+        Validations.ValidateId(id);
 
-        return await companies.FirstOrDefaultAsync();
+        var companies = await this.unitOfWork.CompanyRepository
+            .GetByExpression(
+            expression => expression.Id == id,
+            new string[] {});
+
+        var company = await companies.FirstOrDefaultAsync();
+
+        Validations.ValidateObjectForNullable(company);
+
+        return company;
     }
 }

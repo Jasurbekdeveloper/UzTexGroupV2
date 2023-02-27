@@ -12,7 +12,7 @@ using UzTexGroupV2.Infrastructure.DbContexts;
 namespace UzTexGroupV2.Infrastructure.Migrations
 {
     [DbContext(typeof(UzTexGroupDbContext))]
-    [Migration("20230205061552_Initial")]
+    [Migration("20230217102246_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -59,13 +59,11 @@ namespace UzTexGroupV2.Infrastructure.Migrations
                     b.ToTable("Address", (string)null);
                 });
 
-            modelBuilder.Entity("UzTexGroupV2.Domain.Entities.Application", b =>
+            modelBuilder.Entity("UzTexGroupV2.Domain.Entities.Applications", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("LanguageCode")
-                        .HasColumnType("nvarchar(450)");
 
                     b.Property<Guid>("AddressId")
                         .HasColumnType("uniqueidentifier");
@@ -87,6 +85,10 @@ namespace UzTexGroupV2.Infrastructure.Migrations
                     b.Property<Guid>("JobId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("LanguageCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("LastName")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
@@ -96,13 +98,13 @@ namespace UzTexGroupV2.Infrastructure.Migrations
                         .HasMaxLength(15)
                         .HasColumnType("nvarchar(15)");
 
-                    b.HasKey("Id", "LanguageCode");
+                    b.HasKey("Id");
 
                     b.HasIndex("AddressId");
 
                     b.HasIndex("JobId", "LanguageCode");
 
-                    b.ToTable("Application", (string)null);
+                    b.ToTable("Applications", (string)null);
                 });
 
             modelBuilder.Entity("UzTexGroupV2.Domain.Entities.Company", b =>
@@ -201,6 +203,26 @@ namespace UzTexGroupV2.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Languages", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("14dd86e9-a6d1-4345-b07e-c0d785bb0093"),
+                            Code = "uz",
+                            Name = "Uzbek"
+                        },
+                        new
+                        {
+                            Id = new Guid("1f7b2894-5460-47e2-9632-b452f5c20b79"),
+                            Code = "en",
+                            Name = "English"
+                        },
+                        new
+                        {
+                            Id = new Guid("7c9a5183-0937-4757-9d41-e58e5b5d4fad"),
+                            Code = "ru",
+                            Name = "Russian"
+                        });
                 });
 
             modelBuilder.Entity("UzTexGroupV2.Domain.Entities.News", b =>
@@ -227,44 +249,18 @@ namespace UzTexGroupV2.Infrastructure.Migrations
                     b.ToTable("News", (string)null);
                 });
 
-            modelBuilder.Entity("UzTexGroupV2.Domain.Entities.NewsImages", b =>
+            modelBuilder.Entity("UzTexGroupV2.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("NewId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("NewsId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("NewsLanguageCode")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NewsId", "NewsLanguageCode");
-
-                    b.ToTable("NewsImages");
-                });
-
-            modelBuilder.Entity("UzTexGroupV2.Domain.Entities.User", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("ExpiredRefreshToken")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
@@ -279,15 +275,37 @@ namespace UzTexGroupV2.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("RefreshToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Salt")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("UserRole")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Email")
+                        .IsUnique();
+
                     b.ToTable("User", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("26266427-7304-46d7-82ea-1ec13c9c7a59"),
+                            Email = "elchinuralov07@gmail.com",
+                            FirstName = "Elchin",
+                            LastName = "Uralov",
+                            PasswordHash = "v7DrXBP/nQ3sHmWUgp6nkmBkJCeKxVK4+iljRqJfgDI=",
+                            Salt = "a9feaa2d-8692-4d2e-bf64-3d8200ad8c8b",
+                            UserRole = 1
+                        });
                 });
 
-            modelBuilder.Entity("UzTexGroupV2.Domain.Entities.Application", b =>
+            modelBuilder.Entity("UzTexGroupV2.Domain.Entities.Applications", b =>
                 {
                     b.HasOne("UzTexGroupV2.Domain.Entities.Address", "Address")
                         .WithMany()
@@ -336,15 +354,6 @@ namespace UzTexGroupV2.Infrastructure.Migrations
                     b.Navigation("Factory");
                 });
 
-            modelBuilder.Entity("UzTexGroupV2.Domain.Entities.NewsImages", b =>
-                {
-                    b.HasOne("UzTexGroupV2.Domain.Entities.News", "News")
-                        .WithMany("Images")
-                        .HasForeignKey("NewsId", "NewsLanguageCode");
-
-                    b.Navigation("News");
-                });
-
             modelBuilder.Entity("UzTexGroupV2.Domain.Entities.Company", b =>
                 {
                     b.Navigation("Factories");
@@ -358,11 +367,6 @@ namespace UzTexGroupV2.Infrastructure.Migrations
             modelBuilder.Entity("UzTexGroupV2.Domain.Entities.Job", b =>
                 {
                     b.Navigation("Applications");
-                });
-
-            modelBuilder.Entity("UzTexGroupV2.Domain.Entities.News", b =>
-                {
-                    b.Navigation("Images");
                 });
 #pragma warning restore 612, 618
         }

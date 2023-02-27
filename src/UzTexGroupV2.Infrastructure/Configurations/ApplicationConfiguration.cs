@@ -39,7 +39,7 @@ public class ApplicationConfiguration : IEntityTypeConfiguration<Applications>
         builder
             .HasOne(app => app.Job)
             .WithMany(job => job.Applications)
-            .HasForeignKey(app => app.JobId)
+            .HasForeignKey(app => new { app.JobId, app.LanguageCode })
             .OnDelete(DeleteBehavior.ClientCascade);
     }
 }

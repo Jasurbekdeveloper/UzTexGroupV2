@@ -1,24 +1,35 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using UzTexGroupV2.Application.EntitiesDto.News;
 using UzTexGroupV2.Application.MappingProfiles;
+using UzTexGroupV2.Application.QueryExtentions;
 using UzTexGroupV2.Domain.Entities;
 using UzTexGroupV2.Infrastructure.Repositories;
+using UzTexGroupV2.Model;
 
 namespace UzTexGroupV2.Application.Services;
 
-public class NewsService : IServiceBase<CreateNewsDto, NewsDto, ModifyNewsDto>
+public class NewsService
 {
     private readonly LocalizedUnitOfWork lacalizedUnitOfWork;
+    private readonly IHttpContextAccessor httpContextAccessor;
 
-    public NewsService(LocalizedUnitOfWork lacalizedUnitOfWork)
+    public NewsService(
+        LocalizedUnitOfWork lacalizedUnitOfWork,
+        IHttpContextAccessor httpContextAccessor)
     {
         this.lacalizedUnitOfWork = lacalizedUnitOfWork;
+        this.httpContextAccessor = httpContextAccessor;
     }
 
-    public async ValueTask<NewsDto> CreateEntityAsync(CreateNewsDto entity)
+    public async ValueTask<NewsDto> CreateNewsAsync(CreateNewsDto createNews)
     {
-        var news = NewsMap.MapToNews(entity);
+        var news = NewsMap.MapToNews(createNews);
 
+        ImagesService.SaveImage(createNews.file, 
+            news.Id.ToString(), 
+            this.lacalizedUnitOfWork.NewsRepository.Language.Code);
+        
         var storageNews = await this.lacalizedUnitOfWork
             .NewsRepository.CreateAsync(news);
 
@@ -27,21 +38,26 @@ public class NewsService : IServiceBase<CreateNewsDto, NewsDto, ModifyNewsDto>
         return NewsMap.MapToNewsDto(storageNews);
     }
 
-    public async ValueTask<IQueryable<NewsDto>> RetrieveAllEntitiesAsync()
+    public async ValueTask<IQueryable<NewsDto>> RetrieveAllNewssAsync(
+        QueryParameter queryParameter)
     {
         var newss = await this.lacalizedUnitOfWork.NewsRepository.GetAllAsync();
 
-        return newss.Select(news => NewsMap.MapToNewsDto(news));
+        var paginationNews = newss.PagedList(
+            httpContext: httpContextAccessor.HttpContext,
+            queryParameter: queryParameter);
+
+        return paginationNews.Select(news => NewsMap.MapToNewsDto(news));
     }
 
-    public async ValueTask<NewsDto> RetrieveByIdEntityAsync(Guid Id)
+    public async ValueTask<NewsDto> RetrieveNewsByIdAsync(Guid Id)
     {
         var storageNews = await GetByExpressionAsync(Id);
 
         return NewsMap.MapToNewsDto(storageNews);
     }
 
-    public async ValueTask<NewsDto> ModifyEntityAsync(ModifyNewsDto modifyNewsDto)
+    public async ValueTask<NewsDto> ModifyNewsAsync(ModifyNewsDto modifyNewsDto)
     {
         var storageNews = await GetByExpressionAsync(modifyNewsDto.id);
 
@@ -56,7 +72,7 @@ public class NewsService : IServiceBase<CreateNewsDto, NewsDto, ModifyNewsDto>
 
         return NewsMap.MapToNewsDto(modeifiedNews);
     }
-    public async ValueTask<NewsDto> DeleteEntityAsync(Guid Id)
+    public async ValueTask<NewsDto> DeleteNewsAsync(Guid Id)
     {
         var storageNews = await GetByExpressionAsync(Id);
 
@@ -69,9 +85,15 @@ public class NewsService : IServiceBase<CreateNewsDto, NewsDto, ModifyNewsDto>
     }
     private async ValueTask<News> GetByExpressionAsync(Guid id)
     {
-        var news = await this.lacalizedUnitOfWork.NewsRepository
-           .GetByExpression(expression => expression.Id == id);
+        Validations.ValidateId(id);
 
-        return await news.FirstOrDefaultAsync();
+        var newss = await this.lacalizedUnitOfWork.NewsRepository
+           .GetByExpression(expression => expression.Id == id, new string[] { });
+
+        var news = await newss.FirstOrDefaultAsync();
+
+        Validations.ValidateObjectForNullable(news);
+
+        return news;
     }
 }

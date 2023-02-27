@@ -1,6 +1,8 @@
-﻿namespace UzTexGroupV2.Application.EntitiesDto.Addresses;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace UzTexGroupV2.Application.EntitiesDto.Addresses;
 public record AddressDto(
-    Guid id,
+     Guid id,
     string country,
     string region,
     string district,

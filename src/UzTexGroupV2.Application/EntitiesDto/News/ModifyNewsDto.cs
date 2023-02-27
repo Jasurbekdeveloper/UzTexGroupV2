@@ -1,8 +1,13 @@
-﻿namespace UzTexGroupV2.Application.EntitiesDto.News;
+﻿using Microsoft.AspNetCore.Http;
+using System.ComponentModel.DataAnnotations;
 
-public record ModifyNewsDto
-{
-    public Guid id;
-    public string? title;
-    public string? description;
-}
+namespace UzTexGroupV2.Application.EntitiesDto.News;
+
+public record ModifyNewsDto(
+    [Required(ErrorMessage = $"{nameof(ModifyNewsDto.id)}  berilishi majburiy")]
+    Guid id,
+
+    string? title,
+    string? description,
+    IFormFile? file
+);

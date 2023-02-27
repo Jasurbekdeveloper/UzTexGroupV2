@@ -4,7 +4,7 @@ using UzTexGroupV2.Domain.Entities;
 
 namespace UzTexGroupV2.Infrastructure.Configurations.References;
 
-public class Languages: IEntityTypeConfiguration<Language>
+public class Languages : IEntityTypeConfiguration<Language>
 {
     public void Configure(EntityTypeBuilder<Language> builder)
     {
@@ -12,6 +12,24 @@ public class Languages: IEntityTypeConfiguration<Language>
             .ToTable("Languages");
 
         builder
-            .HasNoKey();
+            .HasData(
+                new Language()
+                {
+                    Id = Guid.NewGuid(),
+                    Code = "uz",
+                    Name = "Uzbek"
+                },
+                new Language()
+                {
+                    Id = Guid.NewGuid(),
+                    Code = "en",
+                    Name = "English"
+                },
+                new Language()
+                {
+                    Id = Guid.NewGuid(),
+                    Code = "ru",
+                    Name = "Russian"
+                });
     }
 }

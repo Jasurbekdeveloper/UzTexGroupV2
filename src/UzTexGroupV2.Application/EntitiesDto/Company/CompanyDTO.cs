@@ -1,7 +1,10 @@
-﻿namespace UzTexGroupV2.Application.EntitiesDto.Company;
+﻿using System.Collections;
+using System.ComponentModel.DataAnnotations;
+using UzTexGroupV2.Application.EntitiesDto.Factory;
 
-public record CompanyDTO
-{
-    public Guid Id { get; set; }
-    public string Name { get; set; }
-}
+namespace UzTexGroupV2.Application.EntitiesDto.Company;
+
+public record CompanyDTO(
+    Guid id,
+    string name);
+

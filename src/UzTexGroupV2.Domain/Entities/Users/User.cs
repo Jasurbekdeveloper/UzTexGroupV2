@@ -9,6 +9,8 @@ public class User
     public string? LastName { get; set; }
     public string Email { get; set; }
     public string PasswordHash { get; set; }
+    public string Salt { get; set; }
+    public string? RefreshToken { get; set; }
+    public DateTime? ExpiredRefreshToken { get; set; }
     public Role UserRole { get; set; }
-
 }

@@ -6,12 +6,11 @@ namespace UzTexGroupV2.Application.MappingProfiles
     public static class AddressMap
     {
         public static Address MapToAddress(
-            CreateAddressDto createAddressDto,
-            Guid addressId)
+            CreateAddressDto createAddressDto)
         {
             return new Address
             {
-                Id = addressId,
+                Id = Guid.NewGuid(),
                 Country = createAddressDto.country,
                 Region= createAddressDto.region,
                 District= createAddressDto.district,

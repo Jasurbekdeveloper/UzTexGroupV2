@@ -1,21 +1,28 @@
 ﻿using UzTexGroupV2.Application.EntitiesDto;
 using UzTexGroupV2.Domain.Entities;
 using UzTexGroupV2.Domain.Enums;
+using UzTexGroupV2.Infrastructure.Authentication;
 
 namespace UzTexGroupV2.Application.MappingProfiles;
 
 public static class UserMap
 {
-    public static User MapToUser(CreateUserDto createUserDto)
+    public static User MapToUser(
+        CreateUserDto createUserDto,
+        IPasswordHasher passwordHasher)
     {
+        string randomsalt = Guid.NewGuid().ToString();
+
         return new User
         {
-            Id = createUserDto.id ?? Guid.NewGuid(),
             FirstName = createUserDto.firstName,
-            LastName = createUserDto.lastName,
+            LastName = createUserDto.lastName,  
             Email = createUserDto.email,
-            UserRole = Role.User,
-            PasswordHash = createUserDto.password
+            UserRole = Role.Admin,
+            Salt = randomsalt,
+            PasswordHash = passwordHasher.GeneratePassword(
+                createUserDto.password,
+                randomsalt)
         };
     }
     public static UserDto MapToUserDto(User user) =>

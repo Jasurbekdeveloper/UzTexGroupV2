@@ -3,7 +3,7 @@ using UzTexGroupV2.Infrastructure.DbContexts;
 
 namespace UzTexGroupV2.Infrastructure.Repositories;
 
-public class ApplicationRepository : RepositoryBase<Applications>
+public class ApplicationRepository : LocalizedRepositoryBase<Applications>
 {
     public ApplicationRepository(UzTexGroupDbContext context) : base(context)
     {

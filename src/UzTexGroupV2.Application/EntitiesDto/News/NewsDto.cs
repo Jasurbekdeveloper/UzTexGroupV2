@@ -1,4 +1,6 @@
-﻿namespace UzTexGroupV2.Application.EntitiesDto.News;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace UzTexGroupV2.Application.EntitiesDto.News;
 
 public record NewsDto(
     Guid id,

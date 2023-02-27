@@ -6,5 +6,4 @@ public class News : LocalizedObject
     public DateTime Date { get; set; }
     public string Title { get; set; }
     public string Description { get; set; }
-    public ICollection<NewsImages> Images { get;}
 }

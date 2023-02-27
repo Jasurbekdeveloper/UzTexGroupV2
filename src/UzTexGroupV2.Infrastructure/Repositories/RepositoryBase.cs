@@ -15,17 +15,27 @@ public class RepositoryBase<T> : IRepositoryBase<T> where T : class
     
     public virtual async ValueTask<IQueryable<T>> GetAllAsync()
     {
-        return context
+        var a = context
             .Set<T>()
             .AsNoTracking();
+        return a;
     }
 
-    public virtual async ValueTask<IQueryable<T>> GetByExpression(Expression<Func<T, bool>> expression)
+    public virtual async ValueTask<IQueryable<T>> GetByExpression(
+        Expression<Func<T, bool>> expression,
+        string[] includes)
     {
-        return context
+        var entities = context
             .Set<T>()
-            .Where(expression)
-            .AsNoTracking();
+            .Where(expression);
+
+
+        foreach(var item in includes )
+        {
+            entities = entities.Include(item);
+        }
+
+        return entities;
     }
 
     public virtual async ValueTask<T> CreateAsync(T entity)
@@ -45,7 +55,7 @@ public class RepositoryBase<T> : IRepositoryBase<T> where T : class
             .Entity;
     }
 
-    public async ValueTask<T> DeleteAsync(T entity)
+    public virtual async ValueTask<T> DeleteAsync(T entity)
     {
         return context
             .Set<T>()

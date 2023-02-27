@@ -1,73 +1,133 @@
-﻿using Microsoft.EntityFrameworkCore;
-using UzTexGroupV2.Application.EntitiesDto.Application;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using System.Data;
+using UzTexGroupV2.Application.EntitiesDto;
 using UzTexGroupV2.Application.MappingProfiles;
+using UzTexGroupV2.Application.QueryExtentions;
 using UzTexGroupV2.Domain.Entities;
+using UzTexGroupV2.Domain.Exceptions;
+using UzTexGroupV2.Infrastructure.DbContexts;
 using UzTexGroupV2.Infrastructure.Repositories;
+using UzTexGroupV2.Model;
 
 namespace UzTexGroupV2.Application.Services;
 
-public class ApplicationService : IServiceBase<CreateApplicationDto, ApplicationDto,ModifyApplicationDto>
+public class ApplicationService
 {
-    private readonly UnitOfWork unitOfWork;
+    private readonly LocalizedUnitOfWork unitOfWork;
+    private readonly AddressService addressService;
+    private readonly UzTexGroupDbContext uzTexGroupDbContext;
+    private readonly IHttpContextAccessor httpContextAccessor;
 
-    public ApplicationService(UnitOfWork unitOfWork)
+    public ApplicationService(
+        LocalizedUnitOfWork unitOfWork,
+        AddressService addressService,
+        UzTexGroupDbContext uzTexGroupDbContext,
+        IHttpContextAccessor httpContextAccessor)
     {
         this.unitOfWork = unitOfWork;
+        this.addressService = addressService;
+        this.uzTexGroupDbContext = uzTexGroupDbContext;
+        this.httpContextAccessor = httpContextAccessor;
     }
 
-    public async ValueTask<ApplicationDto> CreateEntityAsync(
+    public async ValueTask<ApplicationDto> CreateApplicationAsync(
         CreateApplicationDto createApplicationDto)
     {
-        var storageApplication = ApplicationMap.MapToApplication(createApplicationDto);
+        Applications storedApplication = new Applications();
 
-        var storageAdress = AddressMap.MapToAddress(
-            createApplicationDto.createAddressDto,
-            storageApplication.AddressId);
+        var executionStrategy = uzTexGroupDbContext.Database.CreateExecutionStrategy();
+        await executionStrategy.ExecuteAsync(async () =>
+        {
+            using (var transaction = uzTexGroupDbContext.Database.BeginTransaction(IsolationLevel.Serializable))
+            {
+                try
+                {
+                    var application = ApplicationMap.MapToApplication(createApplicationDto);
 
-        await unitOfWork.AddressRepository.CreateAsync(storageAdress);
+                    var storedAddress = await this.addressService
+                        .CreateAddressAsync(createApplicationDto.createAddressDto);
 
-        var application = await this.unitOfWork
-            .ApplicationRepository.CreateAsync(storageApplication);
+                    application.AddressId = storedAddress.id;
 
-        await this.unitOfWork.SaveChangesAsync();
+                    storedApplication = await this.unitOfWork
+                        .ApplicationRepository.CreateAsync(application);
 
-        return ApplicationMap.MapToApplicationDto(application);
+                    await this.unitOfWork.SaveChangesAsync();
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    throw new InValidEntityException(
+                        "Application yoki address ma'lumotlarida xatolik sodir bo'ldi");
+                }
+            }
+        });
+        return ApplicationMap.MapToApplicationDto(storedApplication);
     }
 
-    public async ValueTask<IQueryable<ApplicationDto>> RetrieveAllEntitiesAsync()
+    public async ValueTask<IQueryable<ApplicationDto>> RetrieveAllApplicationsAsync(
+        QueryParameter queryParameter)
     {
         var storageApplications = await this
             .unitOfWork.ApplicationRepository.GetAllAsync();
 
-        return storageApplications.Select(
+        var paginatedAplication = storageApplications.PagedList(
+           httpContext: httpContextAccessor.HttpContext,
+           queryParameter: queryParameter);
+
+        return paginatedAplication.Select(
             application => ApplicationMap.MapToApplicationDto(application));
     }
 
-    public async ValueTask<ApplicationDto> RetrieveByIdEntityAsync(Guid id)
+    public async ValueTask<ApplicationDto> RetrieveApplicationByIdAsync(Guid id)
     {
         var storageApplication = await GetByExpressionAsync(id);
 
         return ApplicationMap.MapToApplicationDto(storageApplication);
     }
 
-    public async ValueTask<ApplicationDto> ModifyEntityAsync(
+    public async ValueTask<ApplicationDto> ModifyApplicationAsync(
         ModifyApplicationDto modifyApplicationDto)
     {
-        var storageApplication = await GetByExpressionAsync(modifyApplicationDto.id);
+        Applications modifiedApplication = new Applications();
 
+        var executionStrategy = uzTexGroupDbContext.Database.CreateExecutionStrategy();
+        await executionStrategy.ExecuteAsync(async () =>
+        {
+            using (var transaction = uzTexGroupDbContext.Database.BeginTransaction(IsolationLevel.Serializable))
+            {
+                try
+                {
+                    var storageApplication = await GetByExpressionAsync(modifyApplicationDto.id);
 
-        ApplicationMap.MapToApplication(applications: storageApplication,
-            modifyApplicationDto: modifyApplicationDto);
+                    if (modifyApplicationDto.modifyAddressDto is not null)
+                        await this.addressService
+                            .ModifyAddressAsync(modifyApplicationDto.modifyAddressDto);
 
-        var application = await this.unitOfWork.ApplicationRepository.UpdateAsync(
-            entity: storageApplication);
+                    ApplicationMap.MapToApplication(applications: storageApplication,
+                        modifyApplicationDto: modifyApplicationDto);
 
-        await this.unitOfWork.SaveChangesAsync();
+                    modifiedApplication = await this.unitOfWork.ApplicationRepository.UpdateAsync(
+                        entity: storageApplication);
 
-        return ApplicationMap.MapToApplicationDto(application);
+                    await this.unitOfWork.SaveChangesAsync();
+                    transaction.Commit();
+
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    throw new InValidEntityException("Address yoki Application ma'lumotlarida xatolik bor");
+                }
+            }
+        });
+
+        return ApplicationMap.MapToApplicationDto(modifiedApplication);
     }
 
-    public async ValueTask<ApplicationDto> DeleteEntityAsync(Guid id)
+    public async ValueTask<ApplicationDto> DeleteApplicationAsync(Guid id)
     {
         var storageApplication = await GetByExpressionAsync(id);
 
@@ -81,9 +141,18 @@ public class ApplicationService : IServiceBase<CreateApplicationDto, Application
 
     private async ValueTask<Applications> GetByExpressionAsync(Guid id)
     {
-        var applications = await this.unitOfWork.ApplicationRepository
-           .GetByExpression(expression => expression.Id == id);
+        Validations.ValidateId(id);
 
-        return await applications.FirstOrDefaultAsync();
+        var applications = await this.unitOfWork.ApplicationRepository
+           .GetByExpression(
+            expression => expression.Id == id,
+            new string[] {"Job", "Address"});
+
+        var application = await applications.FirstOrDefaultAsync();
+
+        Validations.ValidateObjectForNullable<Applications>(application);
+
+        return application;
+
     }
 }

@@ -370,3 +370,7 @@ FodyWeavers.xsd
 /src/UzTexGroupV2.Infrastructure/Migrations/20230205064427_Initial.Designer.cs
 /src/UzTexGroupV2.Infrastructure/Migrations/UzTexGroupDbContextModelSnapshot.cs
 /src/UzTexGroupV2/appsettings.json
+/src/UzTexGroupV2.Infrastructure/Migrations/20230209110303_Initial.cs
+/src/UzTexGroupV2.Infrastructure/Migrations/20230209124449_CreateNewMigration.cs
+/src/UzTexGroupV2.Infrastructure/Migrations/20230209124449_CreateNewMigration.cs
+/src/UzTexGroupV2.Infrastructure/Migrations/20230209110303_Initial.cs

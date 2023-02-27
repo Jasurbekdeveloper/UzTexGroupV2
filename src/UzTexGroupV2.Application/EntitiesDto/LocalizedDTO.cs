@@ -1,6 +1,8 @@
-﻿namespace UzTexGroupV2.Application.EntitiesDto;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace UzTexGroupV2.Application.EntitiesDto;
 
 public record LocalizedDTO
 {
-    public string LanguageCode { get; set; }
+    public Guid? Id { get; set; } = null;
 }
